@@ -11,12 +11,12 @@ class Helper:
     def __init__(self):
         self._db_manager = DBConnection()
 
-    def get_products_by_category(self, category_id: int) -> Optional[Dict[str, Any]]:
+    def get_product(self, start_date: str, end_date: str) -> Optional[Dict[str, Any]]:
         query = """
             SELECT * FROM products
-            WHERE category_id = :category_id;
+            WHERE created_at BETWEEN :start_date AND :end_date;
         """
-        params = {"category_id": product_id}
+        params = {"start_date": start_date, "end_date": end_date}
         db_connection = self._db_manager.connect()
         try:
             product_df: pd.DataFrame = pd.read_sql(
