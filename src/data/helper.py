@@ -13,8 +13,9 @@ class Helper:
 
     def get_product(self, product_id: int) -> Optional[Dict[str, Any]]:
         query = """
-            SELECT * FROM products
-            WHERE id = :product_id;
+            SELECT p.* FROM products p
+            INNER JOIN user_products up ON p.id = up.product_id
+            WHERE up.user_id = :user_id;
         """
         params = {"product_id": product_id}
         db_connection = self._db_manager.connect()
