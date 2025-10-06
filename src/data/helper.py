@@ -11,13 +11,13 @@ class Helper:
     def __init__(self):
         self._db_manager = DBConnection()
 
-    def get_product(self, product_id: int) -> Optional[Dict[str, Any]]:
+    def get_user_products(self, user_id: int) -> Optional[Dict[str, Any]]:
         query = """
             SELECT p.* FROM products p
             INNER JOIN user_products up ON p.id = up.product_id
             WHERE up.user_id = :user_id;
         """
-        params = {"product_id": product_id}
+        params = {"user_id": product_id}
         db_connection = self._db_manager.connect()
         try:
             product_df: pd.DataFrame = pd.read_sql(
@@ -29,7 +29,7 @@ class Helper:
             product_data = product_list[0]
 
         except mysql.connector.Error as e:
-            logging.info(f"Error getting product: str{e}")
+            logging.info(f"Error getting user product: str{e}")
             product_data = None
 
         finally:
