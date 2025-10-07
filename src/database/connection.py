@@ -1,38 +1,34 @@
-from mysql.connector.pooling import MySQLConnectionPool
+from sqlalchemy import create_engine
+from sqlalchemy.pool import QueuePool
 from src.config import Config
-from mysql.connector import Error
 import logging
-
 
 class DBConnection:
     def __init__(self):
         self.config = Config()
-        self._pool = self._create_pool()
+        self._engine = self._create_engine()
 
-    def _create_pool(self):
+    def _create_engine(self):
         try:
-            port = int(self.config.DB_PORT)
-            pool = MySQLConnectionPool(
-                pool_name=self.config.POOL_NAME,
+            engine = create_engine(
+                self.config.SQLALCHEMY_DATABASE_URI,
+                poolclass=QueuePool,
                 pool_size=self.config.POOL_SIZE,
-                host=self.config.DB_HOST,
-                database=self.config.DB_NAME,
-                user=self.config.DB_USER,
-                password=self.config.DB_PASSWORD,
-                port=port
+                max_overflow=10,
+                pool_pre_ping=True
             )
-            logging.info(f"INFO: Connection Pool '{self.config.POOL_NAME}' initialized with size {self.config.POOL_SIZE}.")
-            return pool
-        except Error as e:
-            logging.info(f"ERROR: Failed to create MySQL connection pool: {e}")
+            logging.info(f"SQLAlchemy engine created with pool size {self.config.POOL_SIZE}")
+            return engine
+        except Exception as e:
+            logging.error(f"ERROR: Failed to create SQLAlchemy engine: {e}")
             return None
 
     def connect(self):
-        if self._pool:
+        if self._engine:
             try:
-                return self._pool.get_connection()
-            except Error as e:
-                print(f"ERROR: Failed to borrow connection from pool: {e}")
+                return self._engine.connect()
+            except Exception as e:
+                logging.error(f"ERROR: Failed to get connection from engine: {e}")
                 return None
         return None
 
@@ -40,6 +36,9 @@ class DBConnection:
         if connection:
             connection.close()
 
+    def get_engine(self):
+        return self._engine
+
     def shutdown_pool(self):
-        if self._pool:
-            self._pool = None
+        if self._engine:
+            self._engine.dispose()
