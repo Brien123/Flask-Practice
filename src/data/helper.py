@@ -3,11 +3,15 @@ from typing import Dict, Optional, Any, List
 import pandas as pd
 from sqlalchemy import text
 from src.database.connection import DBConnection
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+
 
 
 
 class Helper:
-    def __init__(self):
+    def __init__(self, db_manager: DBConnection):
         self._db_manager = DBConnection()
 
     def get_product(self, product_id, int) -> Optional[Dict[str, Any]]:
@@ -57,7 +61,7 @@ class Helper:
 
     def get_product_id(self, user_id: int) -> Optional[Dict[str, Any]]:
 
-        query = "SELECT * FROM product  WHERE  user_id = :user_id "
+        query = "SELECT * FROM product  WHERE  user_id = user_id "
 
         params = {"user_id":user_id}
 
@@ -66,7 +70,7 @@ class Helper:
         try:
             product_df: pd.DataFrame = pd.read_sql(
 
-                text(query),
+                sql=query,
 
                 con=db_engine,
 
