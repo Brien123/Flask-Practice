@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional, Any, List
+from typing import List, Dict, Optional, Any
 import pandas as pd
 from sqlalchemy import text
 
@@ -10,27 +10,6 @@ class Helper:
     def __init__(self):
         self._db_manager = DBConnection()
         
-    def get_user_products(self, user_id: int) -> List[Dict[str, Any]]:
-        query = """
-        SELECT p.* FROM products p
-        INNER JOIN user_products up ON p.id = up.product_id
-        WHERE up.user_id = :user_id;
-        """
-        params = {"user_id": user_id}
-        db_connection = self._db_manager.connect()
-        try:
-            product_df: pd.DataFrame = pd.read_sql(
-                sql=text(query),
-                con=db_connection,
-                params=params
-            )
-            product_list: List[Dict[str, Any]] = product_df.to_dict(orient="records")
-            return product_list  # Returns all products, not just the first one
-        except mysql.connector.Error as e:
-            logging.info(f"Error getting user products: {e}")
-            return []
-        finally:
-            self._db_manager.close(db_connection)    
     
     def get_products_by_category(self, category_id: int) -> List[Dict[str, Any]]:
         query = """
@@ -54,32 +33,62 @@ class Helper:
         
         return product_list    
 
-    def get_product(self, product_id: int) -> Optional[Dict[str, Any]]:
-        query = """
-            SELECT * FROM products
-            WHERE id = :product_id;
+    class DatabaseManager:
+        def __init__(self):
+            pass
+    
+    class ProductService:
+        def __init__(self, db_manager):
+            """
+            Initializing ProductService, with a database manager.
+                
+            Args:
+                db_manager: The database manager that provides connection context
+            """
+            self._db_manager = db_manager
+    
+    # Usage now
+    db_manager = DatabaseManager()
+    product_service = ProductService(db_manager)        
+                
+    def get_user_products(self, user_id: int) -> List[Dict[str, Any]]:
+        """    
+        Retrieves now all products for a specific user, from the database.
+                
+        Args: 
+            user_id: The ID of the user, whose products we're to retrieve
+                    
+        Returns:
+            List of dictionaries containing product data, or an empty list if "error" occurs    
         """
-        params = {"product_id": product_id}
-        db_connection = self._db_manager.connect()
+            # Let's start now with the SQL query, of placeholder :user_id
+        QUERY_USER_PRODUCTS = """
+            SELECT * FROM products
+            WHERE user_id = :user_id;
+        """
+            
+        params = {"user_id": user_id}
+            
         try:
-            product_df: pd.DataFrame = pd.read_sql(
-                sql=text(query),
-                con=db_connection,
-                params=params
-            )
-            if not product_df.empty:
-                product_data = product_df.to_dict(orient="records")[0]
-            else:
-                product_data = None
-
+            # Using the 'with' statement for the connection management(Context Manager)
+            # This is what will help to automatically close the connection.
+            with self._db_manager.connect() as db_connection:
+                # I'm using 'pandas.read_sql', with the parametrized query
+                product_df: pd.DataFrame = pd.read_sql(
+                    sql = text(QUERY_USER_PRODUCTS),
+                    con = db_connection,
+                    params = params
+                )
+                # Now let's convert the above DataFrame, into a list of dictionaries(records)
+                product_list: List[Dict[str, Any]] = product_df.to_dict(orient="records")
+                return product_list
+                
         except Exception as e:
-            logging.error(f"Error getting product: {e}")
-            product_data = None
-
-        finally:
-            self._db_manager.close(db_connection)
-
-        return product_data
+            # Catching and logging any errors that may arise(e.g DB Connection error, SQL error, etc.)
+            logging.error(f"Sorry! Failed to retrieve products for user {user_id}: {e}")
+            return []
+                  
+    
 
     def get_products(self) -> Optional[List[Dict[str, Any]]]:
         query = "SELECT * FROM products"
