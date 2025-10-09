@@ -2,6 +2,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import QueuePool
 from src.config import Config
 import logging
+from dotenv import load_dotenv
+import os
+
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env.example'))
 
 class DBConnection:
     def __init__(self):
