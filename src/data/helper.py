@@ -109,3 +109,24 @@ class Helper:
             self._db_manager.close(db_connection)
 
         return product_list
+
+    def fetch_products(self, page: int = 1, size: int = 20):
+        offset = (page - 1) * size
+        query = """
+            SELECT * from products
+            ORDER BY created_at
+            LIMIT :size  
+            OFFSET :offset
+        """
+        params = {"size": size, "offset": offset}
+        db_connection = self._db_manager.connect()
+        try:
+            products_df: pd.DataFrame = pd.read_sql(text(query), con=db_connection, params=params)
+            product_list = products_df.to_dict(orient="records")
+        except Exception as e:
+            logging.error(f"Error getting products for user: {e}")
+            product_list = None
+        finally:
+            self._db_manager.close(db_connection)
+
+        return product_list

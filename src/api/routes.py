@@ -1,3 +1,5 @@
+from http.client import responses
+
 from flask import jsonify, Blueprint, request
 from src.data.helper import Helper
 from src.elasticsearch.elasticsearch_client import ElasticSearchClient
@@ -74,4 +76,12 @@ def search():
     page = data.get('page', 1)
     results = elasictsearch_client.search(search_term=search_term, index_name=index_name, size=size, page=page)
     response = {"results": results}
+    return jsonify(response), 200
+
+@api.route("/web-products", methods=["GET"])
+def web_products():
+    page = request.args.get("page", 1, type=int)
+    size = request.args.get("size", 20, type=int)
+    products = helper.fetch_products(page=page, size=size)
+    response = {"products": products}
     return jsonify(response), 200
