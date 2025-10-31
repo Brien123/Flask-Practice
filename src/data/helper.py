@@ -10,7 +10,7 @@ class Helper:
     def __init__(self):
         self._db_manager = DBConnection()
 
-    def get_product(self, product_id: int) -> Optional[Dict[str, Any]]:
+    def get_product(self, product_id: int, ) -> Optional[Dict[str, Any]]:
         query = """
             SELECT * FROM products
             WHERE id = :product_id;
@@ -51,7 +51,7 @@ class Helper:
 
         return products_list
     
-    def get_product_by_category(self, category_id: int) -> Optional[List[Dict[str, Any]]]:
+    def get_product_by_category(self, category_id: int,) -> Optional[List[Dict[str, Any]]]:
         query = """
             SELECT * FROM products
             WHERE category_id = :category_id;
@@ -69,13 +69,16 @@ class Helper:
 
         return products_list
 
-    def get_product_by_user(self, user_id: int)-> Optional[List[str: Any]]:
+    def get_product_by_user(self,  user_id: int, size: int = 5, page: int = 1)-> Optional[List[str: Any]]:
+        offset = (page - 1) * size
         query = """
             SELECT * FROM products
-            WHERE user_id = :user_id;
+            WHERE user_id = user_id
+            ORDER BY created_at
+            LIMIT :size
+            OFFSET :offset;
         """
-
-        params = {"user_id": user_id}
+        params = {"size":size, "user_id":user_id, "offset":offset}
         db_connection = self._db_manager.connect()
         try:
             products_df: pd.DataFrame = pd.read_sql(text(query), con=db_connection, params=params)

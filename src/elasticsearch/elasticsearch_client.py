@@ -17,18 +17,32 @@ class ElasticSearchClient:
     def connect(self):
         if self.client is None:
             try:
-                self.client = Elasticsearch([self.elastic_url], basic_auth=(self.config.ELASTIC_USER, self.config.ELASTIC_PASSWORD),
-                    verify_certs=False, request_timeout=30)
+                # Connect using explicit keyword arguments
+                self.client = Elasticsearch(
+                    # Pass the host URL (or list of hosts)
+                    [self.config.ELASTICSEARCH_URL],
+                    
+                    # Pass authentication details explicitly
+                    basic_auth=(self.config.ELASTIC_USER, self.config.ELASTIC_PASSWORD),
+                    
+                    # Skip certificate verification (as before)
+                    verify_certs=False, 
+                    
+                    # Use request_timeout
+                    request_timeout=30
+                )
+                
                 if self.client.ping():
                     logging.info("Successfully connected to Elasticsearch")
                 else:
+                    # If ping fails, this is the error message you see
                     logging.error("Failed to ping Elasticsearch")
                     self.client = None
             except Exception as e:
                 logging.error(f"Failed to connect to Elasticsearch: {e}")
                 self.client = None
         return self.client
-
+    
     def create_index(self, index_name: str, mapping: dict) -> bool:
         client = self.connect()
         if client:

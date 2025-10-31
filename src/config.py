@@ -25,7 +25,7 @@ class Config:
     # Elasticsearch configuration
     ELASTIC_USER = os.getenv('ELASTIC_USER')
     ELASTIC_PASSWORD = os.getenv('ELASTIC_PASSWORD')
-    ELASTICSEARCH_URL = f"http://{ELASTIC_USER}:{ELASTIC_PASSWORD}@localhost:9200"
+    ELASTICSEARCH_URL = "https://127.0.0.1:9200"
 
     FLASK_APP = 'wsgi.py'
     FLASK_ENV = os.environ.get('ENV')
