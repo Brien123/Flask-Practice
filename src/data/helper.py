@@ -50,13 +50,17 @@ class Helper:
             self._db_manager.close(db_connection)
 
         return products_list
-    
-    def get_product_by_category(self, category_id: int,) -> Optional[List[Dict[str, Any]]]:
+     
+    def get_product_by_category(self, category_id: int, size: int=5, page: int = 1) -> Optional[List[Dict[str, Any]]]:
+        offset = (page - 1) * size
         query = """
             SELECT * FROM products
-            WHERE category_id = :category_id;
+            WHERE category_id = category_id
+            ORDER BY created_at
+            LIMIT :size
+            OFFSET :offset;
         """
-        params = {"category_id": category_id}
+        params = {"size":size, "offset":offset, "category_id": category_id}
         db_connection = self._db_manager.connect()
         try:
             products_df: pd.DataFrame = pd.read_sql(text(query), con=db_connection, params=params)
